@@ -223,6 +223,11 @@ class AppTextStyle {
     fontSize: 14,
     fontWeight: FontWeight.w500,
   );
+  static const secondaryLabelMedium = TextStyle(
+    color: AppColors.secondary,
+    fontSize: 16,
+    fontWeight: FontWeight.w500,
+  );
   static const primaryLabelSmall = TextStyle(
     color: AppColors.primary,
     fontSize: 14,

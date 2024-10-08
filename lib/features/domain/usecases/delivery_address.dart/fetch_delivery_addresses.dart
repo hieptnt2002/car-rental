@@ -4,7 +4,7 @@ import 'package:car_rental/features/domain/repositories/delivery_address_reposit
 import 'package:car_rental/shared/domain/repositories/data_result.dart';
 
 class FetchDeliveryAddressesUseCase
-    extends UseCase<DataResult<List<DeliveryAddress>>, DeliveryAddressParam> {
+    extends UseCaseNoParam<DataResult<List<DeliveryAddress>>> {
   final DeliveryAddressRepository _addressRepository;
 
   FetchDeliveryAddressesUseCase({
@@ -12,14 +12,6 @@ class FetchDeliveryAddressesUseCase
   }) : _addressRepository = addressRepository;
 
   @override
-  Future<DataResult<List<DeliveryAddress>>> execute(
-    DeliveryAddressParam params,
-  ) =>
-      _addressRepository.getDeliveryAddresses(userId: params.userId);
-}
-
-class DeliveryAddressParam {
-  final int userId;
-
-  DeliveryAddressParam({required this.userId});
+  Future<DataResult<List<DeliveryAddress>>> execute() =>
+      _addressRepository.getDeliveryAddresses();
 }

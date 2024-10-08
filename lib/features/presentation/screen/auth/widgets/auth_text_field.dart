@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 class AuthTextField extends StatelessWidget {
   final TextEditingController controller;
+  final FocusNode? focusNode;
   final String hintText;
   final Widget? prefixIcon;
   final Widget? suffixIcon;
@@ -11,6 +12,7 @@ class AuthTextField extends StatelessWidget {
   const AuthTextField({
     super.key,
     required this.controller,
+    this.focusNode,
     required this.hintText,
     this.prefixIcon,
     this.suffixIcon,
@@ -23,6 +25,7 @@ class AuthTextField extends StatelessWidget {
     return TextFormField(
       controller: controller,
       obscureText: obscureText,
+      focusNode: focusNode,
       cursorColor: AppColors.black,
       decoration: InputDecoration(
         hintText: hintText,

@@ -40,7 +40,6 @@ class BookingRepositoryImpl extends BaseRepository
           pickupMethod: pickupMethod,
           deliveryAddressId: deliveryAddressId,
           carId: carId,
-          userId: 1,
         ),
       );
 
@@ -78,8 +77,7 @@ class BookingRepositoryImpl extends BaseRepository
     required BookingStatus status,
   }) {
     return resultWithMappedFuture(
-      future: () =>
-          _bookingApi.fetchBookingsByStatus(status: status, userId: 1),
+      future: () => _bookingApi.fetchBookingsByStatus(status: status),
       mapper: (models) => models.map((e) => e.toEntity()).toList(),
     );
   }

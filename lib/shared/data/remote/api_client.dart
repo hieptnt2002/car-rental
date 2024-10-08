@@ -18,7 +18,7 @@ class ApiClient {
     return {
       'Content-Type': 'application/json; charset=UTF-8',
       'language': 'vi',
-      if (token?.isNotEmpty ?? false) 'Authorization': token!,
+      if (token?.isNotEmpty ?? false) 'Authorization': 'Bearer $token!',
       ...defaultHeader,
     };
   }
@@ -105,6 +105,8 @@ class ApiClient {
         throw ForbiddenException(message);
       case 404:
         throw NotFoundException(message);
+      case 409:
+        throw InvalidInputException(message);
       case 422:
         throw UnprocessableContentException(message);
       case 500:

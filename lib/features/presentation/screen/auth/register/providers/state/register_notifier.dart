@@ -16,12 +16,16 @@ class RegisterNotifier extends BaseNotifier<DataState> {
     required String username,
     required String email,
     required String password,
+    required OnSuccess onSuccess,
+    required OnError onErrror,
   }) async {
     await executeTask(
       future: () => _registerUseCase.execute(
         RegisterParam(username: username, email: email, password: password),
       ),
       showLoadingOverlay: true,
+      onSuccess: onSuccess,
+      onError: onErrror,
     );
   }
 }

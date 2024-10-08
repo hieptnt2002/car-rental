@@ -16,12 +16,10 @@ abstract class BookingApi {
     required PickupMethod pickupMethod,
     required int deliveryAddressId,
     required int carId,
-    required int userId,
   });
   Future<List<BookingModel>> fetchBookings();
   Future<List<BookingModel>> fetchBookingsByStatus({
     required BookingStatus status,
-    required int userId,
   });
   Future<BookingModel> fetchBookingById({required int id});
   Future<void> updateBooking({
@@ -36,7 +34,6 @@ abstract class BookingApi {
     required PickupMethod pickupMethod,
     required int deliveryAddressId,
     required int carId,
-    required int userId,
   });
   Future<void> cancelBooking({required int id});
 }
@@ -59,7 +56,6 @@ class BookingApiImpl implements BookingApi {
     required PickupMethod pickupMethod,
     required int deliveryAddressId,
     required int carId,
-    required int userId,
   }) async {
     final requestBody = {
       'fromTime': fromTime.format(),
@@ -74,7 +70,6 @@ class BookingApiImpl implements BookingApi {
       'deliveryAddressId': deliveryAddressId,
       'carId': carId,
       'pickupMethod': pickupMethod.name.toSnakeCase(),
-      'userId': userId,
     };
 
     await ApiClient.request(
@@ -107,7 +102,6 @@ class BookingApiImpl implements BookingApi {
     required PickupMethod pickupMethod,
     required int deliveryAddressId,
     required int carId,
-    required int userId,
   }) {
     throw UnimplementedError();
   }
@@ -115,14 +109,12 @@ class BookingApiImpl implements BookingApi {
   @override
   Future<List<BookingModel>> fetchBookingsByStatus({
     required BookingStatus status,
-    required int userId,
   }) async {
     final res = await ApiClient.request(
       httpMethod: HttpMethod.get,
       url: '/booking/by-status',
       queryParameters: {
         'status': status.name.toSnakeCase(),
-        'userId': '$userId',
       },
     );
     return (res.data as List)

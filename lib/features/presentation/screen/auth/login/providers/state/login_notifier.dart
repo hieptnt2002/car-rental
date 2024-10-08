@@ -15,11 +15,15 @@ class LoginNotifier extends BaseNotifier<DataState> {
   Future<void> login({
     required String username,
     required String password,
+    required OnSuccess onSuccess,
+    required OnError onErrror,
   }) async {
     await executeTask(
       future: () => _loginUseCase
           .execute(LoginParam(username: username, password: password)),
       showLoadingOverlay: true,
+      onSuccess: onSuccess,
+      onError: onErrror,
     );
   }
 }

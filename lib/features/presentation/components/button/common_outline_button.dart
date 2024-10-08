@@ -50,9 +50,9 @@ class CommonOutlineButton extends StatelessWidget {
 
   TextStyle _getTextStyleButton() {
     switch (type) {
-      case OutlineButtonType.primary:
-        return AppTextStyle.secondaryLabelSmall;
       case OutlineButtonType.secondary:
+        return AppTextStyle.secondaryLabelSmall;
+      case OutlineButtonType.primary:
         return AppTextStyle.textColorLabelSmall;
       case OutlineButtonType.warning:
         return AppTextStyle.redLabelSmall;
