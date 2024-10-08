@@ -12,20 +12,16 @@ class DeliveryAddressRepositoryImpl extends BaseRepository
       : _addressApi = addressApi;
 
   @override
-  Future<DataResult<List<DeliveryAddress>>> getDeliveryAddresses({
-    required int userId,
-  }) =>
+  Future<DataResult<List<DeliveryAddress>>> getDeliveryAddresses() =>
       resultWithMappedFuture(
-        future: () => _addressApi.fetchDeliveryAddresses(userId: userId),
+        future: _addressApi.fetchDeliveryAddresses,
         mapper: (models) => models.map((e) => e.toEntity()).toList(),
       );
 
   @override
-  Future<DataResult<DeliveryAddress?>> getDeliveryAddressesDefault({
-    required int userId,
-  }) =>
+  Future<DataResult<DeliveryAddress?>> getDeliveryAddressesDefault() =>
       resultWithMappedFuture(
-        future: () => _addressApi.fetchDeliveryAddressesDefault(userId: userId),
+        future: _addressApi.fetchDeliveryAddressesDefault,
         mapper: (model) => model?.toEntity(),
       );
 }

@@ -1,8 +1,8 @@
 import 'package:car_rental/core/extensions/string_validator_extension.dart';
 import 'package:car_rental/core/extensions/locale_extension.dart';
+import 'package:car_rental/core/utils/snack_bar.dart';
+import 'package:car_rental/features/presentation/components/button/common_button.dart';
 import 'package:car_rental/features/presentation/screen/auth/login/providers/login_provider.dart';
-import 'package:car_rental/shared/presentations/data_state.dart';
-import 'package:car_rental/features/presentation/components/button/common_text_button.dart';
 import 'package:car_rental/features/presentation/components/dialog/custom_dialog.dart';
 import 'package:car_rental/features/presentation/extension/dimension.dart';
 import 'package:car_rental/features/presentation/resources/app_colors.dart';
@@ -29,56 +29,61 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   late final _formKey = GlobalKey<FormState>();
   bool _isHidePassword = true;
 
-  void login() {
+  void _handleLogin() {
     ref.read(loginProvider.notifier).login(
           username: _userNameController.text,
           password: _passwordController.text,
-        );
-  }
-
-  void _showLoginErroDialog(String msg) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return CustomDialog(
-          title: 'Login Failed!',
-          content: msg,
-          actions: [
-            CommonTextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              title: 'Ok',
-            ),
-          ],
-        );
-      },
-    ).timeout(
-      const Duration(seconds: 3),
-      onTimeout: () => Navigator.of(context).pop(),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    ref.listen<DataState>(
-      loginProvider,
-      (previous, next) {
-        next.when(
-          loading: () {},
-          data: (data) {
+          onErrror: (msg) async {
+            await _showLoginFailedDialog(msg);
+            _passwordController.clear();
+            FocusManager.instance.primaryFocus?.unfocus();
+          },
+          onSuccess: (_) {
+            USnackBar.showSuccessSnackBar(
+              'Đăng nhập thành công. Chúc bạn có trải nghiệm tốt!',
+            );
             Navigator.pushNamedAndRemoveUntil(
               context,
               Routes.home,
               (route) => false,
             );
           },
-          error: (message, stackTrace) {
-            _showLoginErroDialog(message);
-          },
+        );
+  }
+
+  Future<void> _showLoginFailedDialog(String msg) {
+    return showDialog(
+      context: context,
+      builder: (context) {
+        return CustomDialog(
+          title: 'Login Failed',
+          content: msg,
+          actions: [
+            CommonButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              title: 'OK',
+            ),
+          ],
         );
       },
     );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: BackButton(
+          onPressed: () {
+            Navigator.pushNamedAndRemoveUntil(
+              context,
+              Routes.home,
+              (route) => false,
+            );
+          },
+        ),
         title: Text(context.l10n.login),
       ),
       backgroundColor: AppColors.gray200,
@@ -133,10 +138,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
                       return context.l10n.enterPassword;
+                    } else if (!value.isPasswordValid) {
+                      return context.l10n.passwordRequirements;
                     }
-                    // else if (!Utils.isValidPassword(value)) {
-                    //   return context.l10n.passwordRequirements;
-                    // }
                     return null;
                   },
                 ),
@@ -159,8 +163,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     title: context.l10n.login,
                     onPressed: () {
                       if (_formKey.currentState!.validate()) {
-                        //handle logic
-                        login();
+                        _handleLogin();
                       }
                     },
                   ),

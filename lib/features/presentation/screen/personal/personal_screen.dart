@@ -108,7 +108,6 @@ class _PersonalScreenState extends State<PersonalScreen> {
                 onPressed: () {
                   Navigator.pushNamed(context, Routes.login);
                 },
-                type: ButtonType.secondary,
               ),
             ),
           ],

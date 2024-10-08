@@ -3,7 +3,6 @@ import 'package:car_rental/features/domain/entities/car.dart';
 import 'package:car_rental/features/domain/entities/delivery_address.dart';
 import 'package:car_rental/features/domain/usecases/booking/add_booking.dart';
 import 'package:car_rental/features/domain/usecases/delivery_address.dart/fetch_delivery_address_default.dart';
-import 'package:car_rental/features/domain/usecases/delivery_address.dart/fetch_delivery_addresses.dart';
 import 'package:car_rental/features/presentation/screen/booking/add_booking/providers/state/booking_state.dart';
 import 'package:car_rental/features/providers.dart';
 import 'package:car_rental/shared/domain/repositories/data_result.dart';
@@ -14,9 +13,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final deliverAddressesProvider = FutureProvider<List<DeliveryAddress>>(
   (ref) async {
-    final result = await ref.read(fetchDeliveryAddressesProvider).execute(
-          DeliveryAddressParam(userId: 1),
-        );
+    final result = await ref.read(fetchDeliveryAddressesProvider).execute();
     return switch (result) {
       Success() => result.data,
       Error() => throw result.exception!,
@@ -62,9 +59,7 @@ class BookingNotifier extends BaseNotifier<BookingState> {
   }
 
   Future<void> fetchDeliveryAddressDefault() async {
-    final res = await _deliveryAddressesDefaultUseCase.execute(
-      DeliveryAddressParam(userId: 1),
-    );
+    final res = await _deliveryAddressesDefaultUseCase.execute();
     switch (res) {
       case Success<DeliveryAddress?>():
         state = state.copyWith(deliveryAddress: res.data);

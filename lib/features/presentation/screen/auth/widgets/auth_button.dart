@@ -29,7 +29,7 @@ class AuthButton extends StatelessWidget {
         ),
         foregroundColor: AppColors.gray500,
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
-        fixedSize: const Size.fromHeight(58),
+        fixedSize: const Size.fromHeight(52),
         shadowColor: Colors.transparent,
         elevation: 0,
       ),
@@ -71,9 +71,9 @@ class AuthButton extends StatelessWidget {
   TextStyle _getTextStyleButton() {
     switch (type) {
       case AuthButtonType.primary:
-        return AppTextStyle.secondaryLabelLarge;
+        return AppTextStyle.secondaryLabelMedium;
       case AuthButtonType.secondary:
-        return AppTextStyle.textColorLabelLarge;
+        return AppTextStyle.textColorLabelMedium;
     }
   }
 }

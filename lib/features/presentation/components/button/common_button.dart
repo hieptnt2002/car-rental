@@ -53,7 +53,7 @@ class CommonButton extends StatelessWidget {
       case ButtonType.primary:
         return AppColors.primary;
       case ButtonType.secondary:
-        return AppColors.gray400;
+        return AppColors.secondary;
     }
   }
 }

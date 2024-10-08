@@ -19,18 +19,18 @@ class AuthRepositoryImpl extends BaseRepository implements AuthRepository {
     required String username,
     required String password,
   }) async {
-    return await resultWithFuture(
+    return await resultWithMappedFuture(
       future: () async {
-        final data =
+        final userToken =
             await _authApi.loginUser(username: username, password: password);
         // save user & token local
         await Future.wait([
-          _authLocalDataSource.saveToken(token: data.token),
-          _authLocalDataSource.saveUser(user: data.user),
+          _authLocalDataSource.saveToken(token: userToken.token),
+          _authLocalDataSource.saveUser(user: userToken.user),
         ]);
-
-        return data.user.toEntity();
+        return userToken;
       },
+      mapper: (userToken) => userToken.user.toEntity(),
     );
   }
 

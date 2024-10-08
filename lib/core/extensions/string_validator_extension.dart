@@ -2,5 +2,6 @@ import 'package:car_rental/core/utils/regex_validator.dart';
 
 extension StringValidatorExtension on String {
   bool get isEmailValid => RegexValidator.email.hasMatch(this);
-  bool get isPasswordValid => RegexValidator.password.hasMatch(this);
+  bool get isPasswordValid =>
+      RegexValidator.password.hasMatch(this) && length > 6;
 }
