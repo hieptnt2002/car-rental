@@ -6,21 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 typedef OnFuture<T> = Future<T> Function();
 typedef OnSuccess<T> = void Function(T data);
 typedef OnError = void Function(String msg);
-typedef OnLoading = void Function(bool isLoading);
 
 abstract class BaseNotifier<State> extends AutoDisposeNotifier<State> {
-  void _handleLoading({
-    required bool showLoadingOverlay,
-    OnLoading? onLoading,
-    required bool isLoading,
-  }) {
-    if (showLoadingOverlay && onLoading == null) {
-      isLoading ? UDialog.showLoading() : UDialog.popLoading();
-    } else {
-      onLoading?.call(isLoading);
-    }
-  }
-
   String _getErrorMessage(Exception? exception) {
     if (exception == null) {
       return 'An error has occurred';
@@ -36,19 +23,10 @@ abstract class BaseNotifier<State> extends AutoDisposeNotifier<State> {
     OnSuccess<T>? onSuccess,
     OnError? onError,
     bool showLoadingOverlay = false,
-    OnLoading? onLoading,
   }) async {
-    _handleLoading(
-      showLoadingOverlay: showLoadingOverlay,
-      onLoading: onLoading,
-      isLoading: true,
-    );
+    if (showLoadingOverlay) UDialog.showLoading();
     final result = await future();
-    _handleLoading(
-      showLoadingOverlay: showLoadingOverlay,
-      onLoading: onLoading,
-      isLoading: false,
-    );
+    if (showLoadingOverlay) UDialog.popLoading();
     switch (result) {
       case Success<T>():
         onSuccess?.call(result.data);
@@ -65,19 +43,10 @@ abstract class BaseNotifier<State> extends AutoDisposeNotifier<State> {
     OnSuccess<T>? onSuccess,
     OnError? onError,
     bool showLoadingOverlay = false,
-    OnLoading? onLoading,
   }) async {
-    _handleLoading(
-      showLoadingOverlay: showLoadingOverlay,
-      onLoading: onLoading,
-      isLoading: true,
-    );
+    if (showLoadingOverlay) UDialog.showLoading();
     final result = await future();
-    _handleLoading(
-      showLoadingOverlay: showLoadingOverlay,
-      onLoading: onLoading,
-      isLoading: false,
-    );
+    if (showLoadingOverlay) UDialog.popLoading();
     switch (result) {
       case Success<T>():
         onSuccess?.call(result.data);
@@ -93,19 +62,10 @@ abstract class BaseNotifier<State> extends AutoDisposeNotifier<State> {
     OnSuccess<List<dynamic>>? onSuccess,
     Function(List<String> error)? onError,
     bool showLoadingOverlay = false,
-    OnLoading? onLoading,
   }) async {
-    _handleLoading(
-      showLoadingOverlay: showLoadingOverlay,
-      onLoading: onLoading,
-      isLoading: true,
-    );
+    if (showLoadingOverlay) UDialog.showLoading();
     final results = await Future.wait(requests);
-    _handleLoading(
-      showLoadingOverlay: showLoadingOverlay,
-      onLoading: onLoading,
-      isLoading: false,
-    );
+    if (showLoadingOverlay) UDialog.popLoading();
     final hasError = results.any((e) => e is Error);
     if (!hasError) {
       onSuccess?.call(results.map((e) => (e as Success).data).toList());

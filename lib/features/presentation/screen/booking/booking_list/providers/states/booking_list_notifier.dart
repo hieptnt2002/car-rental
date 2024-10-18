@@ -14,11 +14,11 @@ class BookingListNotifier extends BaseNotifier<DataState<List<Booking>>> {
   }
 
   Future<void> getBookingsByStatus(BookingStatus status) async {
+    state = const DataState.loading();
     await executeTask(
       future: () => _getBookingsByStatus.execute(
         GetBookingsByStatusParam(status: status),
       ),
-      onLoading: (isLoading) => state = const DataState.loading(),
       onSuccess: (data) {
         state = DataState.data(data);
       },

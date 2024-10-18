@@ -11,8 +11,8 @@ void main() async {
   await LocalStorageService().initialazed();
   await Flavor.settings();
   runApp(
-    ProviderScope(
-      observers: [Observers()],
+    const ProviderScope(
+      // observers: [Observers()],
       child: const MyApp(),
     ),
   );

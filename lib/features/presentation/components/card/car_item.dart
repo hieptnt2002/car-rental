@@ -14,13 +14,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class CarItem extends ConsumerWidget {
   final Car car;
-  final double width;
-  final double height;
+
   const CarItem({
     super.key,
     required this.car,
-    this.width = 255,
-    this.height = 300,
   });
 
   @override
@@ -34,15 +31,15 @@ class CarItem extends ConsumerWidget {
         );
       },
       child: Container(
-        width: width,
-        height: height,
+        width: 270,
+        height: 300,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: AppColors.gray200,
           ),
         ),
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+        padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
@@ -52,9 +49,8 @@ class CarItem extends ConsumerWidget {
             _buildBrand(),
             const SizedBox(height: 8),
             _buildImageCar(),
-            const Spacer(),
             _buildPriceCar(context, ref),
-            const SizedBox(height: 16),
+            const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -66,11 +62,13 @@ class CarItem extends ConsumerWidget {
                         car.owner.address,
                         style: AppTextStyle.grayBodyXSmall,
                         overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
                       ),
                       _buildRating(),
                     ],
                   ),
                 ),
+                const SizedBox(width: 4),
                 CommonButton(
                   title: AppLocalizations.of(context)!.bookNow,
                   onPressed: () {
@@ -108,20 +106,22 @@ class CarItem extends ConsumerWidget {
   }
 
   Widget _buildImageCar() {
-    return SizedBox(
-      width: double.maxFinite,
-      child: CachedNetworkImage(
-        imageUrl: car.image,
-        height: 90,
-        fit: BoxFit.contain,
-        errorWidget: (context, url, error) {
-          return Image.asset(
-            AppImages.appIcon,
-            height: 90,
-            fit: BoxFit.contain,
-          );
-        },
-      ),
+    return Expanded(
+      // child: Hero(
+      //   tag: car.id,
+      //   child: CachedNetworkImage(
+      //     imageUrl: car.image,
+      //     width: double.maxFinite,
+      //     fit: BoxFit.contain,
+      //     errorWidget: (context, url, error) {
+      //       return Image.asset(
+      //         AppImages.appIcon,
+      //         fit: BoxFit.contain,
+      //       );
+      //     },
+      //   ),
+      // ),
+      child: Container(),
     );
   }
 
@@ -129,8 +129,7 @@ class CarItem extends ConsumerWidget {
     return Text(
       car.name,
       style: AppTextStyle.w700TextColorSmall,
-      overflow: TextOverflow.ellipsis,
-      maxLines: 2,
+      maxLines: 1,
     );
   }
 

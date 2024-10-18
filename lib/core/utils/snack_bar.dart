@@ -1,4 +1,5 @@
 import 'package:car_rental/features/presentation/resources/app_colors.dart';
+import 'package:car_rental/features/presentation/resources/app_text_styles.dart';
 import 'package:flutter/material.dart';
 
 class USnackBar {
@@ -25,11 +26,19 @@ class USnackBar {
       ..showSnackBar(snackBar);
   }
 
-  static void showNotificatonSnackBar(String title) {
+  static void showInfoSnackBar(String title) {
     final snackBar = SnackBar(
-      content: Text(title),
+      content: Text(
+        title,
+        style: AppTextStyle.primaryLabelSmall,
+        textAlign: TextAlign.center,
+      ),
       behavior: SnackBarBehavior.floating,
-      backgroundColor: AppColors.gray500,
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(kBottomNavigationBarHeight),
+      ),
     );
     messengerKey.currentState!
       ..removeCurrentSnackBar()

@@ -1,49 +1,57 @@
 import 'package:car_rental/core/extensions/locale_extension.dart';
-import 'package:car_rental/features/domain/entities/car.dart';
+import 'package:car_rental/core/indicator/circle_indicator.dart';
 import 'package:car_rental/features/presentation/components/card/car_item.dart';
 import 'package:car_rental/features/presentation/resources/app_colors.dart';
+import 'package:car_rental/features/presentation/resources/app_images.dart';
 import 'package:car_rental/features/presentation/resources/app_text_styles.dart';
 import 'package:car_rental/features/presentation/resources/route_manager.dart';
+import 'package:car_rental/features/presentation/screen/search/providers/search_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class SearchResultsScreen extends StatefulWidget {
+class SearchResultsScreen extends ConsumerStatefulWidget {
   final String keyword;
   const SearchResultsScreen({super.key, required this.keyword});
 
   @override
-  State<SearchResultsScreen> createState() => _SearchResultsScreenState();
+  ConsumerState<SearchResultsScreen> createState() =>
+      _SearchResultsScreenState();
 }
 
-class _SearchResultsScreenState extends State<SearchResultsScreen> {
-  bool _isPriceAscending = true;
-  int _currentTab = 0;
-  final List<Car> cars = [];
+class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
+  final ScrollController _scrollController = ScrollController();
+  late final _searchResultsNotifier = ref.read(searchResultsProvider.notifier);
 
-  void _toggleTabBar(int index) {
-    setState(() {
-      if (_currentTab != index || _currentTab == 3) {
-        switch (index) {
-          case 0:
-            // List default most rented
-            break;
-          case 1:
-            break;
-          case 2:
-            // List default most rented
-            break;
-          case 3:
-            _isPriceAscending =
-                _currentTab == index ? !_isPriceAscending : _isPriceAscending;
-            cars.sort(
-              (a, b) => _isPriceAscending
-                  ? a.pricePerDay.compareTo(b.pricePerDay)
-                  : b.pricePerDay.compareTo(a.pricePerDay),
-            );
-            break;
-        }
-        _currentTab = index;
-      }
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _searchResultsNotifier.searchAndSortCars(keyword: widget.keyword);
     });
+    _scrollController.addListener(_scrollListener);
+  }
+
+  void _scrollListener() {
+    if (_scrollController.position.atEdge &&
+        _scrollController.position.pixels > 0) {
+      _searchResultsNotifier.loadMoreCars();
+    }
+  }
+
+  Future<void> _jumpToEndPage() {
+    return Future.delayed(
+      Duration.zero,
+      () {
+        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_scrollListener);
+    _scrollController.dispose();
+    super.dispose();
   }
 
   @override
@@ -68,23 +76,23 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
           ],
           bottom: _buildTabBar(context),
         ),
-        body: TabBarView(
-          children: List.generate(4, (index) => _buildListCar()),
-        ),
+        body: _buildListCar(),
       ),
     );
   }
 
   TabBar _buildTabBar(BuildContext context) {
     return TabBar(
-      dividerColor: AppColors.gray500,
+      dividerColor: AppColors.gray300,
       indicatorColor: AppColors.secondary,
       isScrollable: true,
       labelColor: AppColors.secondary,
       unselectedLabelColor: AppColors.gray500,
       indicatorSize: TabBarIndicatorSize.tab,
       tabAlignment: TabAlignment.center,
-      onTap: _toggleTabBar,
+      onTap: (value) {
+        _searchResultsNotifier.toggleTab(value, widget.keyword);
+      },
       tabs: [
         Tab(text: context.l10n.related),
         Tab(text: context.l10n.latest),
@@ -94,7 +102,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
             children: [
               Text(context.l10n.price),
               Icon(
-                _isPriceAscending
+                _searchResultsNotifier.isPriceSortingAscending
                     ? Icons.arrow_upward_rounded
                     : Icons.arrow_downward_rounded,
                 size: 16,
@@ -107,12 +115,44 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
   }
 
   Widget _buildListCar() {
-    return ListView.separated(
-      shrinkWrap: true,
-      padding: const EdgeInsets.all(16),
-      separatorBuilder: (_, __) => const SizedBox(height: 8),
-      itemCount: cars.length,
-      itemBuilder: (_, index) => CarItem(car: cars[index]),
+    return ref.watch(searchResultsProvider).stateCars.when(
+      loading: () {
+        return const Center(
+          child: SpinKitCircle(
+            color: AppColors.secondary,
+            size: 48,
+          ),
+        );
+      },
+      data: (cars) {
+        if (cars.isEmpty) return _buildNotFound();
+        return ListView.separated(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.all(16),
+          separatorBuilder: (_, __) => const SizedBox(height: 8),
+          itemCount: cars.length + 1,
+          controller: _scrollController,
+          itemBuilder: (_, index) {
+            if (index == cars.length) {
+              if (ref.watch(searchResultsProvider).hasLoadingMore) {
+                _jumpToEndPage();
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  child: SpinKitCircle(
+                    color: AppColors.secondary,
+                    size: 32,
+                  ),
+                );
+              }
+              return const SizedBox(height: 0);
+            }
+            return CarItem(car: cars[index]);
+          },
+        );
+      },
+      error: (message, stackTrace) {
+        return Text(message, style: AppTextStyle.redLabelSmall);
+      },
     );
   }
 
@@ -143,6 +183,21 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
           ),
           cursorColor: AppColors.textColor,
         ),
+      ),
+    );
+  }
+
+  Widget _buildNotFound() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Image.asset(AppImages.cartEmpty, width: 120, height: 120),
+          const Text(
+            'Không có xe nào!',
+            style: AppTextStyle.grayBodyMedium,
+          ),
+        ],
       ),
     );
   }

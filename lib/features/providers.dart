@@ -1,4 +1,5 @@
 import 'package:car_rental/features/data/datasources/local/auth_local_data_source.dart';
+import 'package:car_rental/features/data/datasources/local/search_history_data_source.dart';
 import 'package:car_rental/features/data/datasources/remote/auth_api.dart';
 import 'package:car_rental/features/data/datasources/remote/booking_api.dart';
 import 'package:car_rental/features/data/datasources/remote/carousel_image_api.dart';
@@ -12,6 +13,7 @@ import 'package:car_rental/features/data/repositories/carousel_image_repository_
 import 'package:car_rental/features/data/repositories/brand_repository_impl.dart';
 import 'package:car_rental/features/data/repositories/car_repository_impl.dart';
 import 'package:car_rental/features/data/repositories/delivery_address_repository_impl.dart';
+import 'package:car_rental/features/data/repositories/search_history_repositoy_impl.dart';
 import 'package:car_rental/features/domain/entities/favorite_car_repository_impl.dart';
 import 'package:car_rental/features/domain/repositories/auth_repository.dart';
 import 'package:car_rental/features/domain/repositories/booking_repository.dart';
@@ -19,12 +21,15 @@ import 'package:car_rental/features/domain/repositories/brand_repository.dart';
 import 'package:car_rental/features/domain/repositories/car_repository.dart';
 import 'package:car_rental/features/domain/repositories/delivery_address_repository.dart';
 import 'package:car_rental/features/domain/repositories/favorite_car_repository.dart';
+import 'package:car_rental/features/domain/repositories/search_history_repository.dart';
 import 'package:car_rental/features/domain/usecases/auth/login.dart';
 import 'package:car_rental/features/domain/usecases/auth/register.dart';
 import 'package:car_rental/features/domain/usecases/booking/add_booking.dart';
 import 'package:car_rental/features/domain/usecases/booking/get_bookings_by_status.dart';
 import 'package:car_rental/features/domain/usecases/brand/get_brands.dart';
+import 'package:car_rental/features/domain/usecases/car/get_car_names.dart';
 import 'package:car_rental/features/domain/usecases/car/get_cars.dart';
+import 'package:car_rental/features/domain/usecases/car/get_cars_with_keyword_and_sorting.dart';
 import 'package:car_rental/features/domain/usecases/carousel_image/get_carousel_images.dart';
 import 'package:car_rental/features/domain/usecases/delivery_address.dart/fetch_delivery_address_default.dart';
 import 'package:car_rental/features/domain/usecases/delivery_address.dart/fetch_delivery_addresses.dart';
@@ -56,6 +61,10 @@ final deliveryAddressApiProvider = Provider<DeliveryAddressApi>(
 );
 
 final bookingApiProvider = Provider<BookingApi>((ref) => BookingApiImpl());
+
+final searchHistoryDataSourceProvider = Provider<SearchHistoryDataSource>(
+  (ref) => SearchHistoryDataSourceImpl(),
+);
 
 // --------- domain ---------
 // -- favorite --
@@ -155,5 +164,22 @@ final addBookingProvider = Provider(
 final getBookingsByStatusProvider = Provider(
   (ref) => GetBookingsByStatus(
     bookingRepository: ref.watch(bookingRepositoryProvider),
+  ),
+);
+
+final getCarNamesProvider = Provider(
+  (ref) => GetCarNames(carRepository: ref.watch(carRepositoryProvider)),
+);
+
+final getCarsWithKeywordAndSortingProvider = Provider(
+  (ref) => GetCarsWithKeywordAndSorting(
+    carRepository: ref.watch(carRepositoryProvider),
+  ),
+);
+
+// --search history--
+final searchHistoryRepositoryProvider = Provider<SearchHistoryRepository>(
+  (ref) => SearchHistoryRepositoryImpl(
+    searchHistoryDataSource: ref.watch(searchHistoryDataSourceProvider),
   ),
 );
