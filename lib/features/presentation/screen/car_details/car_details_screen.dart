@@ -135,10 +135,13 @@ class _CarDetailsScreenState extends ConsumerState<CarDetailsScreen> {
         SizedBox(
           width: double.maxFinite,
           child: Center(
-            child: CachedNetworkImage(
-              imageUrl: _car.image,
-              height: context.percentHeight(40),
-              fit: BoxFit.contain,
+            child: Hero(
+              tag: _car.id,
+              child: CachedNetworkImage(
+                imageUrl: _car.image,
+                height: context.percentHeight(40),
+                fit: BoxFit.contain,
+              ),
             ),
           ),
         ),

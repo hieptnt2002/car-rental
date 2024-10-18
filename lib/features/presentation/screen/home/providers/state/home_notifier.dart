@@ -20,15 +20,13 @@ class HomeNotifier extends BaseNotifier<DataState<HomeState>> {
   }
 
   Future<void> _fetchData() async {
+    state = const DataState.loading();
     await executeMultipleTasks(
       requests: [
         _getCarsUseCase.execute(GetCarParam()),
         _getBrandsUseCase.execute(),
         _getCarouselImages.execute(),
       ],
-      onLoading: (isLoading) {
-        state = const DataState.loading();
-      },
       onSuccess: (result) {
         state = DataState.data(
           HomeState(
@@ -37,6 +35,9 @@ class HomeNotifier extends BaseNotifier<DataState<HomeState>> {
             carouselImages: result[2],
           ),
         );
+      },
+      onError: (error) {
+        state = DataState.error(error.toString());
       },
     );
   }

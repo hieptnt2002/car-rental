@@ -71,7 +71,7 @@ class RouteGenerator {
         );
       case Routes.search:
         return MaterialPageRoute(
-          builder: (_) => const SearchScreen(),
+          builder: (_) => SearchScreen(keyword: args?['keyword']),
         );
       case Routes.searchResults:
         return MaterialPageRoute(

@@ -5,83 +5,99 @@ import 'package:car_rental/core/utils/snack_bar.dart';
 import 'package:car_rental/features/presentation/resources/app_colors.dart';
 import 'package:car_rental/features/presentation/resources/app_text_styles.dart';
 import 'package:car_rental/features/presentation/resources/route_manager.dart';
+import 'package:car_rental/features/presentation/screen/search/providers/search_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class SearchScreen extends StatefulWidget {
-  const SearchScreen({super.key});
+class SearchScreen extends ConsumerStatefulWidget {
+  final String? keyword;
+  const SearchScreen({super.key, this.keyword});
 
   @override
-  State<SearchScreen> createState() => _SearchScreenState();
+  ConsumerState<SearchScreen> createState() => _SearchScreenState();
 }
 
-class _SearchScreenState extends State<SearchScreen> {
-  final TextEditingController _controller = TextEditingController();
-  final List<String> _allSuggestions =
-      List.generate(100, (index) => 'Lamboghini $index');
-  List<String> _suggestions = ['Lamboghini', 'Ferrari', 'Volvo', 'Maybach'];
+class _SearchScreenState extends ConsumerState<SearchScreen> {
+  final TextEditingController _searchController = TextEditingController();
   final _focusNode = FocusNode();
   Timer? _debounceTimer;
 
   @override
   void initState() {
     super.initState();
-    _controller.addListener(_onSearchChanged);
+    if (widget.keyword != null) _searchController.text = widget.keyword!;
+    _focusNode.requestFocus();
+    _searchController.addListener(_onSearchInputChanged);
   }
 
   @override
   void dispose() {
     super.dispose();
-    _controller.dispose();
+    _searchController.dispose();
     _focusNode.dispose();
     _debounceTimer?.cancel();
   }
 
-  void _onSearchChanged() {
+  void _onSearchInputChanged() {
     if (_debounceTimer?.isActive ?? false) _debounceTimer!.cancel();
-    _debounceTimer = Timer(
-      const Duration(milliseconds: 500),
-      () {
-        setState(() {
-          final keyword = _controller.text;
-          if (keyword.trim().isEmpty) {
-            _suggestions = ['Lamboghini', 'Ferrari', 'Volvo', 'Maybach'];
-          } else {
-            //call api
-            _suggestions = _allSuggestions
-                .where(
-                  (suggestion) => suggestion.toLowerCase().contains(
-                        keyword.toLowerCase(),
-                      ),
-                )
-                .toList();
-          }
-        });
-      },
-    );
+    _debounceTimer = Timer(const Duration(milliseconds: 500), () {
+      final keyword = _searchController.text.trim();
+      if (keyword.isNotEmpty) {
+        ref.read(searchProvider.notifier).getSuggestedSearches(keyword);
+      } else {
+        ref.read(searchProvider.notifier).clearSuggestions();
+      }
+    });
+  }
+
+  void _navigateToSearchResults(String? keyword) {
+    if (keyword != null && keyword.trim().isNotEmpty) {
+      ref.read(searchProvider.notifier).addSearchToHistory(keyword);
+      Navigator.pushNamed(
+        context,
+        Routes.searchResults,
+        arguments: {'keyword': keyword},
+      );
+    } else {
+      USnackBar.showErrorSnackBar(
+        context.l10n.pleaseEnterKeywordSearch,
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: _buildSearch(),
+        title: _buildSearchBar(),
         leading: const BackButton(
           color: AppColors.black,
         ),
         titleSpacing: 0,
         backgroundColor: AppColors.white,
       ),
-      body: CustomScrollView(
-        slivers: [
-          _buildSuggestSearch(),
-          if (_controller.text.trim().isEmpty && _suggestions.isNotEmpty)
-            _buildRemoveSearchHistory(),
-        ],
-      ),
+      body: _buildBody(),
     );
   }
 
-  Widget _buildRemoveSearchHistory() {
+  Widget _buildBody() {
+    if (_searchController.text.trim().isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        child: CustomScrollView(
+          slivers: [
+            _buildRecentSearches(),
+            if (ref.watch(searchProvider).recentSearches.isNotEmpty)
+              _buildClearRecentSearchesButton(),
+          ],
+        ),
+      );
+    } else {
+      return _buildSuggestedSeaches();
+    }
+  }
+
+  Widget _buildClearRecentSearchesButton() {
     return SliverToBoxAdapter(
       child: Container(
         width: double.maxFinite,
@@ -92,50 +108,53 @@ class _SearchScreenState extends State<SearchScreen> {
             context.l10n.clearSearchHistory,
             style: AppTextStyle.gray500LabelSmall,
           ),
-          onTap: () {},
+          onTap: () {
+            ref.read(searchProvider.notifier).clearRecentSearches();
+          },
         ),
       ),
     );
   }
 
-  Widget _buildSearch() {
+  Widget _buildSearchBar() {
     return SizedBox(
       width: double.maxFinite,
       height: 40,
       child: Row(
         children: [
-          _buildTextFieldSearch(),
-          _buildButtonSearch(),
+          _buildSearchField(),
+          _buildSearchButton(),
           const SizedBox(width: 16),
         ],
       ),
     );
   }
 
-  Widget _buildTextFieldSearch() {
+  Widget _buildSearchField() {
     return Expanded(
       child: TextFormField(
+        style: AppTextStyle.textColorBodySmall,
         decoration: InputDecoration(
           hintText: context.l10n.hintSearch,
           hintStyle: AppTextStyle.grayBodySmall,
-          enabledBorder: _buildBorderTextField(),
-          focusedBorder: _buildBorderTextField(),
+          enabledBorder: _buildTextFieldBorder(),
+          focusedBorder: _buildTextFieldBorder(),
           contentPadding: const EdgeInsets.symmetric(horizontal: 16),
           suffixIcon: InkWell(
-            onTap: _controller.clear,
+            onTap: _searchController.clear,
             child: const Icon(Icons.close, size: 14, color: AppColors.gray500),
           ),
           suffixIconConstraints: const BoxConstraints.expand(width: 30),
         ),
         cursorColor: AppColors.textColor,
-        controller: _controller,
-        onFieldSubmitted: _pushToSearchResultScreen,
+        controller: _searchController,
+        onFieldSubmitted: _navigateToSearchResults,
         focusNode: _focusNode,
       ),
     );
   }
 
-  OutlineInputBorder _buildBorderTextField() {
+  OutlineInputBorder _buildTextFieldBorder() {
     return const OutlineInputBorder(
       borderRadius: BorderRadius.only(
         topLeft: Radius.circular(8),
@@ -145,12 +164,12 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  Widget _buildButtonSearch() {
+  Widget _buildSearchButton() {
     return SizedBox(
       width: 40,
       child: IconButton(
         onPressed: () {
-          _pushToSearchResultScreen(_controller.text);
+          _navigateToSearchResults(_searchController.text);
         },
         style: IconButton.styleFrom(
           backgroundColor: AppColors.secondary,
@@ -167,14 +186,18 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  Widget _buildSuggestSearch() {
-    return SliverList.separated(
-      itemCount: _suggestions.length,
+  Widget _buildSuggestedSeaches() {
+    final suggestedSearches = ref.watch(searchProvider).suggestedSearches;
+    return ListView.separated(
+      itemCount: suggestedSearches.length,
       itemBuilder: (context, index) {
         return ListTile(
-          title: Text(_suggestions[index]),
+          title: Text(
+            suggestedSearches[index],
+            style: AppTextStyle.textColorBodySmall,
+          ),
           onTap: () {
-            _pushToSearchResultScreen(_suggestions[index]);
+            _navigateToSearchResults(suggestedSearches[index]);
           },
         );
       },
@@ -183,17 +206,39 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  void _pushToSearchResultScreen(String? value) {
-    if (value != null && value.trim().isNotEmpty) {
-      Navigator.pushNamed(
-        context,
-        Routes.searchResults,
-        arguments: {'keyword': value},
-      );
-    } else {
-      USnackBar.showErrorSnackBar(
-        context.l10n.pleaseEnterKeywordSearch,
-      );
-    }
+  Widget _buildRecentSearches() {
+    final recentSearches = ref.watch(searchProvider).recentSearches;
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children:
+              recentSearches.reversed.map(_buildRecentSearchChip).toList(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRecentSearchChip(String value) {
+    return GestureDetector(
+      onTap: () {
+        _searchController.text = value;
+      },
+      child: Container(
+        constraints: const BoxConstraints(minWidth: 72),
+        decoration: BoxDecoration(
+          border: Border.all(width: 0.5, color: AppColors.gray500),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+        child: Text(
+          value,
+          style: AppTextStyle.textColorBodySmall,
+          textAlign: TextAlign.center,
+        ),
+      ),
+    );
   }
 }

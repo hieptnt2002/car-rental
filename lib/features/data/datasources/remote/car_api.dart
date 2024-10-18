@@ -7,6 +7,14 @@ abstract class CarApi {
     required int pageNo,
     required int pageSize,
   });
+  Future<List<String>> fetchCarNamesByKeyword({required String keyword});
+  Future<PaginatedResponse<CarModel>> fetchCarsWithKeywordAndSorting({
+    required int pageNo,
+    required int pageSize,
+    required String keyword,
+    String? sortDirection,
+    String? sortBy,
+  });
 }
 
 class CarApiImpl implements CarApi {
@@ -32,5 +40,45 @@ class CarApiImpl implements CarApi {
       },
     );
     return paginatedCars;
+  }
+
+  @override
+  Future<List<String>> fetchCarNamesByKeyword({required String keyword}) async {
+    final res = await ApiClient.request(
+      httpMethod: HttpMethod.get,
+      url: '/car/names',
+      queryParameters: {'keyword': keyword},
+    );
+
+    return (res.data as List).map((e) => e as String).toList();
+  }
+
+  @override
+  Future<PaginatedResponse<CarModel>> fetchCarsWithKeywordAndSorting({
+    required int pageNo,
+    required int pageSize,
+    required String keyword,
+    String? sortDirection,
+    String? sortBy,
+  }) async {
+    final parameters = {
+      'pageNo': '$pageNo',
+      'pageSize': '$pageSize',
+      'keyword': keyword,
+      if (sortDirection != null) 'sortDirection': sortDirection,
+      if (sortBy != null) 'sortBy': sortBy,
+    };
+
+    final res = await ApiClient.request(
+      httpMethod: HttpMethod.get,
+      url: '/car/search-by',
+      queryParameters: parameters,
+    );
+    return PaginatedResponse<CarModel>.fromJson(
+      res.data,
+      mappingData: (jsonData) => jsonData
+          .map((e) => CarModel.fromMap(e as Map<String, dynamic>))
+          .toList(),
+    );
   }
 }
